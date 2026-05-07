@@ -1,0 +1,4 @@
+scenedetect[opencv]>=0.6
+openai-whisper>=20231117
+ollama>=0.3
+ffmpeg-python>=0.2
