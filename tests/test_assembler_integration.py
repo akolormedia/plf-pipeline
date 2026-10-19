@@ -100,6 +100,37 @@ def test_assembler_empty_inputs():
     assert "src:bruto" in text
 
 
+def test_assembler_no_cast_uses_unidentified_figure():
+    """With an empty CAST, T:ACT/T:EL subjects must fall back to X1.
+
+    Regression: the assembler used to emit subj:A1 unconditionally, which
+    failed plf.validate() with 'references non-existent CAST member' when
+    the user context had no characters (found by the Step 3 e2e run).
+    """
+    shots, vision, transcript, audio = _make_inputs()
+    context = UserContext(
+        description="No characters provided.",
+        characters=[],  # empty cast
+        locations=[{"name": "ext field", "desc": "open field"}],
+    )
+    text = assemble(
+        shots=shots, vision=vision, transcript=Transcript(), audio=audio,
+        context=context, video_filename="test.mp4",
+    )
+
+    parsed = plf.parse(text)
+    result = plf.validate(parsed)
+    assert result.is_valid, f"validation errors with empty cast: {result.errors}"
+
+    acts = [e for e in parsed.timeline if e.track == "ACT"]
+    assert acts, "expected T:ACT entries"
+    assert all(e.fields["subj"] == "X1" for e in acts)
+
+    cast_ids = {c.id for c in parsed.cast}
+    assert "X1" in cast_ids
+    assert "A1" not in cast_ids
+
+
 def test_assembler_words_stay_inside_dialogue():
     shots, vision, transcript, audio = _make_inputs()
     text = assemble(

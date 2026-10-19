@@ -39,7 +39,7 @@ def _write_header(
     context: UserContext,
     video_filename: str,
 ):
-    proj_slug = proj.replace(" ", "")
+    proj_slug = proj.replace(" ", "").replace(":", "-")
     duration = shots[-1].o if shots else 0.0
 
     lines.append(
@@ -55,6 +55,11 @@ def _write_header(
         nombre = char.get("name", f"Speaker_{i + 1}")
         desc = char.get("desc", "unknown")
         lines.append(f"  {char_id}  nombre:{nombre}  desc:{desc}")
+
+    if not context.characters:
+        # No cast provided: register an unidentified figure so T:ACT entries
+        # have a valid subj: (X1 = unidentified per the CAST ID rules).
+        lines.append("  X1  nombre:unknown  desc:unidentified-figure")
 
     lines.append("")
     lines.append("SCENES:")
@@ -92,6 +97,9 @@ def _write_timeline(
     context: UserContext,
 ):
     vision_by_index = {v.shot_index: v for v in vision}
+    # Actions and person-elements need a CAST-valid subject: identified
+    # characters get A1, otherwise fall back to the unidentified figure X1.
+    subj = "A1" if context.characters else "X1"
 
     for i, shot in enumerate(shots):
         v = vision_by_index.get(i, VisionOutput(shot_index=i))
@@ -111,7 +119,7 @@ def _write_timeline(
         if v.act:
             lines.append(
                 f"i:{shot.i:.2f}    o:{shot.o:.2f}    T:ACT  "
-                f"subj:A1  act:{v.act}  arc:{v.arc or 'neutral'}"
+                f"subj:{subj}  act:{v.act}  arc:{v.arc or 'neutral'}"
             )
 
         for elem in v.elements:
@@ -120,7 +128,7 @@ def _write_timeline(
             if elem_type == "person":
                 lines.append(
                     f"i:{shot.i:.2f}    o:{shot.o:.2f}    T:EL   "
-                    f"sh:{shot_id}  subj:A1  attr:{elem_desc}"
+                    f"sh:{shot_id}  subj:{subj}  attr:{elem_desc}"
                 )
             else:
                 obj_name = elem_desc.replace(" ", "-")
