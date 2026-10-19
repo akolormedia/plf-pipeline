@@ -14,7 +14,7 @@ VIDEO FILE
     ├── Video Track
     │   ├── scene_detector  → PySceneDetect → shot boundaries (i:/o:)
     │   ├── frame_sampler   → Extract representative frames per shot
-    │   └── vision          → Qwen2-VL 7B → shot type, camera, mood, elements
+    │   └── vision          → Qwen2.5-VL 7B → shot type, camera, mood, elements
     │
     └── Audio Track
         ├── transcriber      → Whisper large-v3 → word-level transcript
@@ -63,7 +63,7 @@ python -m pipeline.pipeline video.mp4 context.json
 Heavy ML dependencies included only when the corresponding module is imported:
 - `scenedetect[opencv]` — shot detection
 - `openai-whisper` — transcription
-- `ollama` — vision analysis (Qwen2-VL)
+- `ollama` — vision analysis (Qwen2.5-VL)
 - `pyannote-audio` — speaker diarization (requires HF token)
 - `panns-inference` — audio classification
 

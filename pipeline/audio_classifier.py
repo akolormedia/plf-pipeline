@@ -65,7 +65,8 @@ def classify_with_panns(
 ) -> AudioClassification:
     try:
         import panns_inference
-    except ImportError:
+    except Exception:
+        # Broad catch: import-time side effects can raise OSError too.
         raise ImportError(
             "panns-inference is required. Install with:\n"
             "  pip install panns-inference"

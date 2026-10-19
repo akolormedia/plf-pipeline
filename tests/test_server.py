@@ -48,6 +48,10 @@ def test_status_reports_ok():
     assert set(data["components"].keys()) == {
         "scenedetect", "whisper", "ollama", "pyannote", "panns",
     }
+    for name, comp in data["components"].items():
+        assert isinstance(comp["available"], bool), name
+        if not comp["available"]:
+            assert comp.get("reason"), f"{name} unavailable without a reason"
 
 
 def test_generate_returns_plain_text_plf(monkeypatch):

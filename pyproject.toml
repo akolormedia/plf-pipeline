@@ -15,7 +15,8 @@ dependencies = [
 
 [project.optional-dependencies]
 scene = [
-    "scenedetect[opencv]>=0.6",
+    "scenedetect>=0.7",
+    "opencv-python>=4.8",
 ]
 audio = [
     "openai-whisper>=20231117",
@@ -27,7 +28,7 @@ diarization = [
     "pyannote-audio>=3.1",
 ]
 classify = [
-    "panns-inference>=2.3",
+    "panns-inference>=0.1.1",
 ]
 server = [
     "fastapi>=0.110",
@@ -39,6 +40,13 @@ dev = [
 full = [
     "plf-pipeline[scene,audio,vision,diarization,classify,server]",
 ]
+
+# NOTE (torch stack): `pyannote-audio` pulls a specific `torch` version and can
+# DOWNGRADE an existing torch install, breaking `torchvision`/`torchaudio`
+# (errors like "operator torchvision::nms does not exist"). The verified-good
+# trio in this environment is torch==2.8.0 + torchaudio==2.8.0 +
+# torchvision==0.23.0. Install the diarization extra with care, or reinstall
+# that trio together afterwards.
 
 [tool.setuptools.packages.find]
 include = ["pipeline*"]

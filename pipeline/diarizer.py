@@ -17,7 +17,9 @@ def diarize(
 ) -> list[DiarizationSegment]:
     try:
         from pyannote.audio import Pipeline
-    except ImportError:
+    except Exception:
+        # Catch broadly: a broken transitive dep (e.g. torchcodec ABI mismatch)
+        # raises OSError on import, not ImportError.
         raise ImportError(
             "pyannote-audio is required. Install with:\n"
             "  pip install pyannote-audio\n"

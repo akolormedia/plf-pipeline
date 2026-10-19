@@ -2,11 +2,14 @@
 ffmpeg-python>=0.2
 
 # Pipeline stages (install what you need, or use: pip install -e ".[full]")
-scenedetect[opencv]>=0.6   # scene detection
+scenedetect>=0.7            # scene detection
+opencv-python>=4.8          # required by scenedetect 0.7 (no [opencv] extra)
 openai-whisper>=20231117   # transcription
-ollama>=0.3                # vision (Qwen2-VL)
+ollama>=0.3                # vision (Qwen2.5-VL)
 pyannote-audio>=3.1        # speaker diarization (needs HF_TOKEN)
-panns-inference>=2.3       # ambient/music classification
+# NOTE: pyannote can downgrade torch and break torchvision/torchaudio.
+# Good trio: torch==2.8.0 + torchaudio==2.8.0 + torchvision==0.23.0
+panns-inference>=0.1.1     # ambient/music classification
 
 # HTTP server (pipeline server for plf-tauri integration)
 fastapi>=0.110

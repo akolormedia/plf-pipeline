@@ -1,5 +1,5 @@
 """
-Vision analysis using Qwen2-VL via Ollama.
+Vision analysis using Qwen2.5-VL via Ollama.
 
 Analyzes video frames to determine shot type, camera movement,
 mood, action, and elements in frame.
@@ -15,29 +15,20 @@ except ImportError:
     HAS_OLLAMA = False
 
 
-VISION_MODEL = "qwen2-vl:7b"
+VISION_MODEL = "qwen2.5vl:7b"
 
-VISION_PROMPT = """Analyze this video frame and describe:
-1. Shot type: one of ELS, LS, MLS, MS, MCU, CU, ECU, OTS, POV, AER
-2. Camera movement: one of sta, pan, tilt, push, pull, track, crane, hh, dly
-3. Mood: one of mel, ale, ten, rom, sad, mie, ang, neu
-4. Action: what is happening (hyphenated, lowercase, English)
-5. Location: describe the setting (hyphenated slug format)
-6. Elements: list objects and people visible with attributes
+VISION_PROMPT = """You are analyzing a single video frame that is attached to this message. Look at the attached image carefully before answering.
 
-Respond ONLY with a JSON object:
-{
-  "shot": "MS",
-  "cam": "sta",
-  "mood": "mel",
-  "act": "person-walks-toward-door",
-  "loc": "int-room-dim",
-  "elements": [
-    {"type": "person", "desc": "woman standing tall"},
-    {"type": "object", "desc": "wooden-table dusty"}
-  ],
-  "description": "A woman stands in a dimly lit room near a wooden table."
-}
+Answer these in plain words:
+1. What is the shot type? (ELS, LS, MLS, MS, MCU, CU, ECU, OTS, POV, AER)
+2. What is the camera movement? (sta, pan, tilt, push, pull, track, crane, hh, dly)
+3. What is the mood? (mel, ale, ten, rom, sad, mie, ang, neu)
+4. What action is happening? Answer in hyphenated lowercase English.
+5. Where is this? Describe the setting as a hyphenated slug.
+6. What objects or people are visible? List each with a short attribute description.
+
+Then, after your analysis, output ONLY a JSON object with these keys and no extra text:
+{"shot":"","cam":"","mood":"","act":"","loc":"","elements":[{"type":"person|object","desc":""}],"description":""}
 """
 
 
@@ -60,15 +51,17 @@ def analyze_shots(
 
         primary_frame = shot_frame.frame_paths[0]
         try:
-            response = ollama.chat(
+            # NOTE: use generate(), not chat(). In this ollama client version,
+            # chat() silently ignores the `images` field, so the model never
+            # sees the frame and parrots the worked example in VISION_PROMPT.
+            # generate() does pass images through. Verified 2026-10-19.
+            response = ollama.generate(
                 model=model,
-                messages=[{
-                    "role": "user",
-                    "content": VISION_PROMPT,
-                    "images": [_encode_image(primary_frame)],
-                }],
+                prompt=VISION_PROMPT,
+                images=[_encode_image(primary_frame)],
+                options={"temperature": 0.2},
             )
-            output = _parse_vision_response(response["message"]["content"])
+            output = _parse_vision_response(response["response"])
             output.shot_index = shot_frame.shot_index
             results.append(output)
         except Exception as e:

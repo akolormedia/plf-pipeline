@@ -27,12 +27,23 @@ class GenerateRequest(BaseModel):
     context: dict = Field(default_factory=dict)
 
 
-def _check_component(import_name: str) -> dict:
+def _check_component(import_name: str, probe_attr: str | None = None) -> dict:
+    """Report availability of an optional pipeline dependency.
+
+    Must never raise: some third-party imports run code at import time
+    (e.g. panns_inference downloads a labels CSV and needs `wget`), which
+    can raise non-ImportError exceptions. Treat any failure as "unavailable".
+
+    If probe_attr is given, also verify the module exposes that attribute,
+    so a shallow/broken import isn't reported as available.
+    """
     try:
-        __import__(import_name)
+        mod = __import__(import_name, fromlist=["_"])
+        if probe_attr and not hasattr(mod, probe_attr):
+            return {"available": False, "reason": f"missing attribute {probe_attr}"}
         return {"available": True}
-    except ImportError:
-        return {"available": False}
+    except Exception as e:
+        return {"available": False, "reason": type(e).__name__}
 
 
 @app.get("/status")
@@ -41,11 +52,11 @@ def status():
         "status": "ok",
         "version": "0.1.0",
         "components": {
-            "scenedetect": _check_component("scenedetect"),
-            "whisper": _check_component("whisper"),
-            "ollama": _check_component("ollama"),
-            "pyannote": _check_component("pyannote.audio"),
-            "panns": _check_component("panns_inference"),
+            "scenedetect": _check_component("scenedetect", "AdaptiveDetector"),
+            "whisper": _check_component("whisper", "load_model"),
+            "ollama": _check_component("ollama", "chat"),
+            "pyannote": _check_component("pyannote.audio", "Pipeline"),
+            "panns": _check_component("panns_inference", "AudioTagging"),
         },
     }
 
