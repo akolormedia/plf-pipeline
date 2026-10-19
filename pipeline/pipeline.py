@@ -26,8 +26,12 @@ def run_pipeline(
 ) -> PipelineResult:
     result = PipelineResult()
 
-    shots = detect_shots(video_path)
-    result.shots = shots
+    try:
+        shots = detect_shots(video_path)
+        result.shots = shots
+    except Exception as e:
+        result.errors.append(f"Scene detection error: {e}")
+        return result
 
     if parallel and len(shots) > 0:
         result = _run_parallel(video_path, shots, context, result)

@@ -1,4 +1,13 @@
-scenedetect[opencv]>=0.6
-openai-whisper>=20231117
-ollama>=0.3
+# Core (required)
 ffmpeg-python>=0.2
+
+# Pipeline stages (install what you need, or use: pip install -e ".[full]")
+scenedetect[opencv]>=0.6   # scene detection
+openai-whisper>=20231117   # transcription
+ollama>=0.3                # vision (Qwen2-VL)
+pyannote-audio>=3.1        # speaker diarization (needs HF_TOKEN)
+panns-inference>=2.3       # ambient/music classification
+
+# HTTP server (pipeline server for plf-tauri integration)
+fastapi>=0.110
+uvicorn>=0.29

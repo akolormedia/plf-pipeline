@@ -1,0 +1,47 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "plf-pipeline"
+version = "0.1.0"
+description = "PLF pipeline — video to .raw.plf auto-generation"
+readme = "README.md"
+license = { text = "MIT" }
+requires-python = ">=3.10"
+dependencies = [
+    "ffmpeg-python>=0.2",
+]
+
+[project.optional-dependencies]
+scene = [
+    "scenedetect[opencv]>=0.6",
+]
+audio = [
+    "openai-whisper>=20231117",
+]
+vision = [
+    "ollama>=0.3",
+]
+diarization = [
+    "pyannote-audio>=3.1",
+]
+classify = [
+    "panns-inference>=2.3",
+]
+server = [
+    "fastapi>=0.110",
+    "uvicorn>=0.29",
+]
+dev = [
+    "pytest>=8.0",
+]
+full = [
+    "plf-pipeline[scene,audio,vision,diarization,classify,server]",
+]
+
+[tool.setuptools.packages.find]
+include = ["pipeline*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
