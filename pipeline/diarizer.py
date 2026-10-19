@@ -34,10 +34,21 @@ def diarize(
             "or pass hf_token parameter."
         )
 
-    pipeline = Pipeline.from_pretrained(
-        "pyannote/speaker-diarization-3.1",
-        use_auth_token=token,
-    )
+    try:
+        pipeline = Pipeline.from_pretrained(
+            "pyannote/speaker-diarization-3.1",
+            token=token,
+        )
+    except Exception as e:
+        msg = str(e)
+        if "403" in msg or "not in the authorized list" in msg or "restricted" in msg:
+            raise PermissionError(
+                "HuggingFace denied access to pyannote/speaker-diarization-3.1.\n"
+                "The model is gated. Visit\n"
+                "  https://huggingface.co/pyannote/speaker-diarization-3.1\n"
+                "and accept the terms with the same account as HF_TOKEN."
+            ) from e
+        raise
 
     if num_speakers:
         diarization = pipeline(audio_path, num_speakers=num_speakers)
